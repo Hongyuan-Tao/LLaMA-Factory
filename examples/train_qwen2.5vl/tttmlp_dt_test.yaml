@@ -1,0 +1,67 @@
+### model
+model_name_or_path: /cluster_home/custom_data/models/Qwen2.5-VL-3B-Instruct
+#/home/users/hongyuan.tao/LinearVLMWrapper/weights/Qwen2-VL-2B-Instruct
+#/home/users/hongyuan.tao/LinearVLMWrapper/weights/Qwen2.5-VL-3B-Instruct
+image_max_pixels: 262144
+video_max_pixels: 16384
+trust_remote_code: true
+
+### method
+stage: dt
+do_train: true
+finetuning_type: customize
+lora_rank: 8
+lora_target: all
+
+### dataset
+dataset: VLM-SFT-LAG, VLM-SFT-IMG # video: mllm_video_demo
+template: qwen2_vl
+cutoff_len: 8096
+max_samples: 1000000
+overwrite_cache: true
+preprocessing_num_workers: 16
+dataloader_num_workers: 4
+
+### output
+output_dir: /job_data/1000k_lr2e-4_wd1e-2_tttmlp
+logging_steps: 10
+save_steps: 1000
+plot_loss: true
+overwrite_output_dir: true
+save_only_model: false
+tokenized_path: saves/1000K_VLM_SFT
+
+### train
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 8
+learning_rate: 2.0e-4
+weight_decay: 0.01
+num_train_epochs: 1.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+bf16: true
+ddp_timeout: 180000000
+resume_from_checkpoint: null
+
+## finetune
+mixer: TTTWrapper
+mse_factor: 1000
+distill_temperature: 2
+#checkpoint_path: /home/users/hongyuan.tao/LinearVLMWrapper/LLaMA-Factory-main/saves/4.13/checkpoint_1000k_lr1e-4_nowd
+distill_stage: stage1
+mixer_config:                             #Used for configuring some processing details within Mamba2 (whether to use residuals, QKNorm, and convolution).
+    mini_batch_size: 64  ###
+    ttt_base_lr: 0.1
+    scan_checkpoint_group_size: 16
+    use_kernel: True
+    ssm_layer: "ttt_mlp"
+distill_weights: ["ttt",
+                 ]
+softmax_attention: []  #train mmMamba-linear
+
+
+### eval
+# val_size: 0.1
+# per_device_eval_batch_size: 1
+# eval_strategy: steps
+# eval_steps: 500

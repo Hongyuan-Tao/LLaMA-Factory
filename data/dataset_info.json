@@ -1,4 +1,30 @@
 {
+  "VLM-SFT-LAG": {
+    "file_name": "/cluster_home/custom_data/datasets/VLM-SFT/all_data_language.json",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations"
+    }
+  },
+
+  "VLM-SFT-IMG": {
+    "file_name": "/cluster_home/custom_data/datasets/VLM-SFT/all_data_image.json",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "images": "image"
+    }
+  },
+
+  "ShareGPT4V": {
+    "file_name": "/home/users/hongyuan.tao/LinearVLMWrapper/data/ShareGPT4V/text_files/sharegpt4v_mix665k_cap23k_coco-ap9k_lcs3k_sam9k_div2k_noid.json",
+    "formatting": "sharegpt",
+    "columns": {
+      "messages": "conversations",
+      "images": "image"
+    }
+  },
+  
   "identity": {
     "file_name": "identity.json"
   },

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from dataclasses import asdict, dataclass, field
-from typing import Any, Literal, Optional
+from typing import List, Dict, Any, Literal, Optional
 
 
 @dataclass
@@ -384,10 +384,45 @@ class SwanLabArguments:
         metadata={"help": "The Lark(飞书) secret for SwanLab."},
     )
 
+@dataclass
+class DistillArguments:
+    mixer: Optional[str] = field(
+        default="mamba2",
+        metadata={"help": "The mixer waiting to be converted."},
+    )
+    mse_factor: Optional[float] = field(
+        default=1000.0,
+        metadata={"help": "The scaling factor of mse loss."},
+    )
+    distill_weights: Optional[List[str]] = field(
+        default_factory=list,
+        metadata={"help": "The trainable weight in end_to_end stage."},
+    )
+    softmax_attention: Optional[List[int]] = field(
+        default_factory=list,
+        metadata={"help": "The softmax_attention layers in Hybrid model."},
+    )
+    mixer_config: Optional[Dict[str, Any]] = field(
+        default_factory=dict,
+        metadata={"help": "Additional configuration for the mixer, provided as a dictionary."},
+    )
+    distill_stage: Optional[str] = field(
+        default="stage1",
+        metadata={"help": "choose the distilling stage."},
+    )
+    checkpoint_path: Optional[str] = field(
+        default=None,
+        metadata={"help": "choose the checkpoint."},
+    )
+    distill_temperature: Optional[float] = field(
+        default=2,
+        metadata={"help": "The scaling factor of mse loss."},
+    )
+
 
 @dataclass
 class FinetuningArguments(
-    SwanLabArguments, BAdamArgument, ApolloArguments, GaloreArguments, RLHFArguments, LoraArguments, FreezeArguments
+    SwanLabArguments, BAdamArgument, ApolloArguments, GaloreArguments, RLHFArguments, LoraArguments, FreezeArguments, DistillArguments
 ):
     r"""Arguments pertaining to which techniques we are going to fine-tuning with."""
 
@@ -395,7 +430,7 @@ class FinetuningArguments(
         default=False,
         metadata={"help": "Whether or not to train model in purely bf16 precision (without AMP)."},
     )
-    stage: Literal["pt", "sft", "rm", "ppo", "dpo", "kto"] = field(
+    stage: Literal["pt", "sft", "rm", "ppo", "dpo", "kto", "dt"] = field(
         default="sft",
         metadata={"help": "Which stage will be performed in training."},
     )
@@ -455,7 +490,7 @@ class FinetuningArguments(
         self.apollo_target: list[str] = split_arg(self.apollo_target)
         self.use_ref_model = self.stage == "dpo" and self.pref_loss not in ["orpo", "simpo"]
 
-        assert self.finetuning_type in ["lora", "freeze", "full"], "Invalid fine-tuning method."
+        assert self.finetuning_type in ["lora", "freeze", "full", "customize"], "Invalid fine-tuning method."
         assert self.ref_model_quantization_bit in [None, 8, 4], "We only accept 4-bit or 8-bit quantization."
         assert self.reward_model_quantization_bit in [None, 8, 4], "We only accept 4-bit or 8-bit quantization."
 

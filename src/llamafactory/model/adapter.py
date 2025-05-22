@@ -254,7 +254,21 @@ def _setup_lora_tuning(
 
     return model
 
+def _setup_distill_tuning(model, finetuning_args, cast_trainable_params_to_fp32=False):
+    
+    for name, param in model.named_parameters():
+        if any(weight_name in name for weight_name in finetuning_args.distill_weights) and not any(f".{num}." in name for num in finetuning_args.softmax_attention):
+            param.requires_grad_(True) 
+            if cast_trainable_params_to_fp32:
+                param.data = param.data.to(torch.float32)
+        else:
+            param.requires_grad_(False)  
 
+    forbidden_modules = get_forbidden_modules(model.config, finetuning_args)
+    for name, param in model.named_parameters():
+        if any(forbidden_module in name for forbidden_module in forbidden_modules):
+            param.requires_grad_(False)            
+    
 def init_adapter(
     config: "PretrainedConfig",
     model: "PreTrainedModel",
@@ -288,7 +302,7 @@ def init_adapter(
     else:
         logger.info_rank0("Upcasting trainable params to float32.")
         cast_trainable_params_to_fp32 = True
-
+    
     if finetuning_args.finetuning_type == "full":
         _setup_full_tuning(model, finetuning_args, is_trainable, cast_trainable_params_to_fp32)
     elif finetuning_args.finetuning_type == "freeze":
@@ -297,6 +311,8 @@ def init_adapter(
         model = _setup_lora_tuning(
             config, model, model_args, finetuning_args, is_trainable, cast_trainable_params_to_fp32
         )
+    elif finetuning_args.finetuning_type == "customize":
+        _setup_distill_tuning(model, finetuning_args, cast_trainable_params_to_fp32=False)
     else:
         raise NotImplementedError(f"Unknown finetuning type: {finetuning_args.finetuning_type}.")
 
